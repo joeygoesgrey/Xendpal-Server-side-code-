@@ -1,0 +1,38 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+alembic = "*"
+sqlalchemy = "*"
+pyjwt = "*"
+uvicorn = "*"
+fastapi = "*"
+gunicorn = "*"
+fastapi-event = "*"
+pythondi = "*"
+click = "*"
+greenlet = "*"
+python-multipart = "*"
+bcrypt = "*"
+aiomysql = "*"
+aiosqlite = "*"
+ujson = "*"
+python-dotenv = "*"
+pydantic-settings = "*"
+passlib = "*"
+psycopg2-binary = "*"
+email-validator = "*"
+asyncpg = "*"
+httpx = "*"
+celery = "*"
+pydantic = {extras = ["email"], version = "*"}
+gevent = "*"
+redis = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
