@@ -3,7 +3,7 @@ from app.core.config import config
 from app.schemas.auth_schemas import RefreshToken, RefreshTokenSchema
 from app.core.utils import JwtService, Verify_password, Hash_password, TokenHelper
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from app.core.db import async_session
+from app.core.db import get_async_session
 from app.models import User
 from app.schemas.api_v2_schemas import GoogleLoginRequest, EmailValidate
 import httpx
@@ -108,7 +108,7 @@ async def login_callback(
 ):
     current_user = await get_current_user(request.code)
     if current_user is not None:
-        async with async_session() as session:
+        async with get_async_session() as session:
             stmt = select(User).filter_by(email=current_user.get("email"))
             result = await session.execute(stmt)
             user = result.scalar_one_or_none()

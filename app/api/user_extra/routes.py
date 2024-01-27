@@ -3,7 +3,7 @@ from fastapi import Request, APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from app.schemas.api_v2_schemas import UserBase
 from app.models import User, File
-from app.core.db import async_session, Transactional
+from app.core.db import get_async_session, AsyncTransactional
 from app.core.exceptions import UnauthorizedException
 import datetime
 from sqlalchemy import func, extract, select
@@ -31,11 +31,11 @@ async def login():
 
 
 @user_router.get("/info", response_model=UserBase)
-@Transactional()
+@AsyncTransactional()
 async def get_user_information(request: Request):
     current_user = request.user
     if current_user:
-        async with async_session() as session:
+        async with get_async_session() as session:
             # Use the select construct for the query
             stmt = select(User).where(User.id == current_user.id)
             result = await session.execute(stmt)
@@ -61,7 +61,7 @@ async def get_yearly_usage(request: Request):
     """
     current_user = request.user
     if current_user:
-        async with async_session() as db:
+        async with get_async_session() as db:
             yearly_usage = await db.execute(
                 select(
                     extract("month", File.created_at).label("month"),
@@ -88,7 +88,7 @@ async def get_yearly_usage(request: Request):
 @user_router.get("/items")
 async def get_user_files(
     request: Request,
-    session: AsyncSession = Depends(async_session)
+    session: AsyncSession = Depends(get_async_session)
 ):
     current_user = request.user
     if current_user:

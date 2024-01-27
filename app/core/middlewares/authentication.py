@@ -8,7 +8,7 @@ from starlette.middleware.authentication import (
 from starlette.requests import HTTPConnection
 from app.models import User
 from app.schemas.auth_schemas import CurrentUser
-from app.core.db import standalone_session, async_session
+from app.core.db import get_async_session
 from sqlalchemy import select
 from uuid import UUID
 
@@ -19,7 +19,7 @@ async def get_user_by_id(user_id: str) -> User:
     except ValueError:
         print("Invalid UUID format")
         return None
-    async with async_session() as session:
+    async with get_async_session() as session:
         query = select(User).where(User.id == valid_uuid)
         result = await session.execute(query)
         user = result.scalar_one_or_none()

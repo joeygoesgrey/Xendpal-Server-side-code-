@@ -1,9 +1,12 @@
 from functools import wraps
+from contextvars import ContextVar
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.db import get_sync_session, get_async_session, session
 
-from app.core.db import session
+# Context variable for async session
+async_session_context: ContextVar[AsyncSession] = ContextVar("async_session_context")
 
-# This part makes sure that tasks involving changing data are done completely and correctly
-class Transactional:
+class AsyncTransactional:
     def __call__(self, func):
         @wraps(func)
         async def _transactional(*args, **kwargs):
@@ -17,3 +20,39 @@ class Transactional:
             return result
 
         return _transactional
+
+
+class SyncTransactional:
+    def __call__(self, func):
+        @wraps(func)
+        def _transactional(*args, **kwargs):
+            with next(get_sync_session()) as db:
+                try:
+                    result = func(*args, **kwargs, db=db)
+                    db.commit()
+                except Exception as e:
+                    db.rollback()
+                    raise e
+            return result
+        return _transactional 
+    
+
+# from functools import wraps
+
+# from app.core.db import session
+
+# # This part makes sure that tasks involving changing data are done completely and correctly
+# class Transactional:
+#     def __call__(self, func):
+#         @wraps(func)
+#         async def _transactional(*args, **kwargs):
+#             try:
+#                 result = await func(*args, **kwargs)
+#                 await session.commit()
+#             except Exception as e:
+#                 await session.rollback()
+#                 raise e
+
+#             return result
+
+#         return _transactional

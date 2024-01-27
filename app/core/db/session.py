@@ -1,4 +1,5 @@
 from contextvars import ContextVar, Token
+from sqlalchemy import create_engine
 from typing import Union
 
 from sqlalchemy.ext.asyncio import (
@@ -51,7 +52,75 @@ session: Union[AsyncSession, async_scoped_session] = async_scoped_session(
     scopefunc=get_session_context,
 )
 
-def async_session() -> Session:
+def get_async_session() -> Session:
     return async_session_factory()
 
 Base = declarative_base()
+
+# Synchronous engine and session
+sync_engines = {
+    "writer": create_engine(config.WRITER_DB_URL),
+    "reader": create_engine(config.READER_DB_URL),
+}
+
+SyncSessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=sync_engines['writer']
+)
+
+
+# Sync session getter
+def get_sync_session():
+    db = SyncSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# from sqlalchemy import create_engine
+# from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+# from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.orm import sessionmaker, declarative_base
+
+# from app.core.config import config
+
+# # Asynchronous engine and session
+# async_engines = {
+#     "writer": create_async_engine(config.WRITER_DB_URL),
+#     "reader": create_async_engine(config.READER_DB_URL),
+# }
+
+# AsyncSessionLocal = sessionmaker(
+#     class_=AsyncSession,
+#     bind=async_engines['writer'],
+#     expire_on_commit=False
+# )
+
+# # Synchronous engine and session
+# sync_engines = {
+#     "writer": create_engine(config.WRITER_DB_URL),
+#     "reader": create_engine(config.READER_DB_URL),
+# }
+
+# SyncSessionLocal = sessionmaker(
+#     autocommit=False,
+#     autoflush=False,
+#     bind=sync_engines['writer']
+# )
+
+# Base = declarative_base()
+
+# # Async session getter
+# async def get_async_session():
+#     async with AsyncSessionLocal() as session:
+#         yield session
+
+# # Sync session getter
+# def get_sync_session():
+#     db = SyncSessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()

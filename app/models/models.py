@@ -14,7 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 import uuid
-from app.core.db import async_session
+from app.core.db import get_async_session
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -34,10 +34,10 @@ class User(Base, TimestampMixin):
 
     @staticmethod
     async def get_user_by_email(email: str) -> "User":
-        async with async_session() as s:
+        async with get_async_session() as s:
             result = await s.execute(select(User).where(User.email == email))
             return result.scalars().first()
-
+     
 
 class File(Base, TimestampMixin):
     __tablename__ = 'files'
