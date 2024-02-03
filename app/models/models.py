@@ -1,24 +1,24 @@
-from sqlalchemy import Column, String, Integer, Boolean
-from app.core.db.mixins import TimestampMixin
-from sqlalchemy.future import select
-from app.core.db import Base
 from sqlalchemy import (
-    BigInteger,
     Column,
     Integer,
     String,
     ForeignKey,
+    BigInteger,
     Boolean,
     LargeBinary,
-    UUID,
 )
-from sqlalchemy.orm import relationship
-import uuid
+from sqlalchemy.orm import relationship, backref
 from app.core.db import get_async_session
+from sqlalchemy.dialects.postgresql import UUID
+from app.core.db import Base
+import uuid
+from app.core.db.mixins import TimestampMixin
+from sqlalchemy.future import select
 
+ 
 def generate_uuid():
     return str(uuid.uuid4())
- 
+
 
 class User(Base, TimestampMixin):
     __tablename__ = "users"
@@ -30,29 +30,39 @@ class User(Base, TimestampMixin):
     space = Column(Integer, default=0)  # Current space used
     max_space = Column(BigInteger, default=524288000)
     password = Column(String)
-    files = relationship("File", back_populates="owner")  # Relationship to files
+    # Ensure folders and files are deleted when the user is deleted
+    folders = relationship("Folder", back_populates="owner", cascade="all, delete-orphan")
+    files = relationship("File", back_populates="owner", cascade="all, delete-orphan")
 
-    @staticmethod
-    async def get_user_by_email(email: str) -> "User":
-        async with get_async_session() as s:
-            result = await s.execute(select(User).where(User.email == email))
-            return result.scalars().first()
-     
+
+class Folder(Base, TimestampMixin):
+    __tablename__ = 'folders'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey('folders.id'), nullable=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    # Set up relationships
+    owner = relationship("User", back_populates="folders")
+    subfolders = relationship("Folder",
+                              backref=backref('parent', remote_side=[id]),
+                              cascade="all, delete-orphan")
+    files = relationship("File", back_populates="folder", cascade="all, delete-orphan")
+
 
 class File(Base, TimestampMixin):
     __tablename__ = 'files'
     file_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))  # Use UUID data type
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))
+    folder_id = Column(UUID(as_uuid=True), ForeignKey('folders.id'), nullable=True)
     file_name = Column(String, index=True)
     total_chunks = Column(Integer)
     is_complete = Column(Boolean, default=False)
-    size = Column(BigInteger)  # Add this line for the size of the file in bytes
-    file_type = Column(String, nullable=True)  # New column for file type
-
-
-    owner = relationship("User", back_populates="files")  # Relationship to User
-    chunks = relationship("Chunk", back_populates="file")
-
+    size = Column(BigInteger)
+    file_type = Column(String, nullable=True)
+    # Ensure chunks are deleted when the file is deleted
+    chunks = relationship("Chunk", back_populates="file", cascade="all, delete-orphan")  
+    owner = relationship("User", back_populates="files")
+    folder = relationship("Folder", back_populates="files")
 
 
 class Chunk(Base, TimestampMixin):
@@ -62,7 +72,6 @@ class Chunk(Base, TimestampMixin):
     sequence_number = Column(Integer)
     data = Column(LargeBinary)
     is_received = Column(Boolean, default=False)
-
-    file = relationship("File", back_populates="chunks")  # Corrected relationship
-
+    # Link back to the file
+    file = relationship("File", back_populates="chunks")
  

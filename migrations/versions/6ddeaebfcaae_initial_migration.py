@@ -1,8 +1,8 @@
 """Initial Migration
 
-Revision ID: 25402575183c
+Revision ID: 6ddeaebfcaae
 Revises: 
-Create Date: 2024-01-24 01:57:07.728851
+Create Date: 2024-02-02 00:03:04.084482
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '25402575183c'
+revision = '6ddeaebfcaae'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -32,15 +32,29 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
+    op.create_table('folders',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('parent_id', sa.UUID(), nullable=True),
+    sa.Column('user_id', sa.UUID(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('edited_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['parent_id'], ['folders.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('files',
     sa.Column('file_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=True),
+    sa.Column('folder_id', sa.UUID(), nullable=True),
     sa.Column('file_name', sa.String(), nullable=True),
     sa.Column('total_chunks', sa.Integer(), nullable=True),
     sa.Column('is_complete', sa.Boolean(), nullable=True),
     sa.Column('size', sa.BigInteger(), nullable=True),
+    sa.Column('file_type', sa.String(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('edited_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['folder_id'], ['folders.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('file_id')
     )
@@ -68,5 +82,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_files_file_name'), table_name='files')
     op.drop_index(op.f('ix_files_file_id'), table_name='files')
     op.drop_table('files')
+    op.drop_table('folders')
     op.drop_table('users')
     # ### end Alembic commands ###

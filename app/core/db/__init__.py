@@ -1,6 +1,6 @@
 from .session import Base, get_sync_session, get_async_session, session
 # from .standalone_session import standalone_session
-from .transactional import AsyncTransactional, SyncTransactional
+from .transactional import AsyncTransactional 
 
 __all__ = [
     "Base",
@@ -8,5 +8,5 @@ __all__ = [
     "AsyncTransactional",
     "session",
     "get_async_session",
-    "SyncTransactional"
+    # "SyncTransactional"
 ]

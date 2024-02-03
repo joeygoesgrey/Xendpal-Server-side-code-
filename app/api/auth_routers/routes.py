@@ -10,19 +10,18 @@ import httpx
 from app.core.exceptions import ForbiddenException  # Import the custom exception
 from sqlalchemy.future import select
 
-
 CLIENT_ID = config.CLIENT_ID
 CLIENT_SECRET = config.CLIENT_SECRET
 REDIRECT_URI = config.REDIRECT_URI
 TOKEN_URL = config.TOKEN_URL
 USER_INFO_URL = config.USER_INFO_URL
 
-
 auth_router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
 
-async def token(form_data: OAuth2PasswordRequestForm = Depends()):
+
+async def token(form_data: OAuth2PasswordRequestForm=Depends()):
     email = form_data.username  # Treated 'username' as 'email'
     password = form_data.password
     if email and password:
@@ -61,7 +60,7 @@ async def get_current_user(request: str):
     try:
         # Extracting the authorization code from the request's query parameters
         authorization_code = request
-
+        print(request)
         # Preparing the data to exchange the authorization code for an access token
         token_data = {
             "code": authorization_code,
@@ -89,14 +88,13 @@ async def get_current_user(request: str):
             user_info = user_response.json()  # Parsing the JSON response
         print(user_info)
         return user_info  # Returning the user's information
-
-    except httpx.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
     except Exception as err:
         print(f"An error occurred: {err}")
 
-    return None  # Return None or some default value if an error occurs
+    # except httpx.HTTPError as http_err:
+    #     print(f"HTTP error occurred: {http_err}")
 
+    return None  # Return None or some default value if an error occurs
 
 
 @auth_router.post(
@@ -140,8 +138,6 @@ async def login_callback(
             return {"access_token": access_token, "refresh_token": refresh_token }
     else:
         raise ForbiddenException()
-
-
 
 
 @auth_router.post(

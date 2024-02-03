@@ -1,4 +1,4 @@
-from .schemas import FileChunk, GoogleLoginRequest, EmailValidate, UserBase, Usage
+from .schemas import FileChunk, GoogleLoginRequest, EmailValidate, UserBase, Usage, FolderSchemaRequest, UserFoldersResponse
 
 __all__ = [
     "FileChunk",
@@ -6,4 +6,6 @@ __all__ = [
     "EmailValidate",
     "UserBase",
     "Usage",
+    "FolderSchemaRequest",
+    "UserFoldersResponse"
 ]

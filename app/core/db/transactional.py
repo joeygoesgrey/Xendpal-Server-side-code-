@@ -22,20 +22,7 @@ class AsyncTransactional:
         return _transactional
 
 
-class SyncTransactional:
-    def __call__(self, func):
-        @wraps(func)
-        def _transactional(*args, **kwargs):
-            with next(get_sync_session()) as db:
-                try:
-                    result = func(*args, **kwargs, db=db)
-                    db.commit()
-                except Exception as e:
-                    db.rollback()
-                    raise e
-            return result
-        return _transactional 
-    
+ 
 
 # from functools import wraps
 

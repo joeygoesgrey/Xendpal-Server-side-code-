@@ -55,9 +55,6 @@ session: Union[AsyncSession, async_scoped_session] = async_scoped_session(
 def get_async_session() -> Session:
     return async_session_factory()
 
-Base = declarative_base()
-
-# Synchronous engine and session
 sync_engines = {
     "writer": create_engine(config.WRITER_DB_URL),
     "reader": create_engine(config.READER_DB_URL),
@@ -77,6 +74,11 @@ def get_sync_session():
         yield db
     finally:
         db.close()
+        
+Base = declarative_base()
+
+# Synchronous engine and session
+
 
 
 # from sqlalchemy import create_engine
